@@ -30,6 +30,7 @@ class TimeoutException(Exception):
 
 #check message commands/require input
 #response_commands=[]
+'''
 def modem_demo():
     s=Modem()
     s.test_cmd()
@@ -42,8 +43,9 @@ def modem_demo():
     print 'Sending message to 9999995'
     s.send('9999995', 'Neoway modem demo '+time.strftime('%Y-%m-%d %H:%M:%S', time.localtime()),0)
 
+'''
 class Modem:
-    def __init__(self, port='COM7', baud=115200, retries=5, min_signal=0):
+    def __init__(self, port = 'COM7', baud = 115200, retries = 5, min_signal = 0):
         """Creates a Modem object to establish serial communication with a modem
 
         port -- specify com port for serial connection (default 7)
@@ -51,18 +53,23 @@ class Modem:
         retries -- maximum retries for at commands before raising exception
         min_signal -- sets minimum required signal quality to send message
 
-        Function opens serial port using pyserial, sends AT test command to verify connection, sets charset to GSM, turns on detailed error reporting
+        Function opens serial port using pyserial, sends AT test command to 
+        verify connection, sets charset to GSM, turns on detailed error reporting
         """
-        self.timeout=5
-        self.retries=retries
-        self.min_signal=min_signal
-        #try:    
-        self.ser = serial.Serial(port=port, baudrate=baud, timeout=.5)
-        self.send()
-        #    self.set_charset("GSM")
-        #    self.detailed_error()
-        #except serial.serialutil.SerialException:
-        #    print 'select another port'
+        self.timeout = 5
+        self.retries = retries
+        self.min_signal = min_signal
+        self.pdu = None
+        self.charset = None
+        self.oldest = 1
+        try:    
+            self.ser = serial.Serial(port = port, baudrate = baud, timeout =.5)
+            self.send()
+            set_detailed_error(self, 1)
+            text_mode(self)
+
+        except serial.serialutil.SerialException:
+            print 'Select another port'
     
     def send(self, cmd='AT\r\n', input=None):
         """
@@ -78,7 +85,7 @@ class Modem:
         on 1st SerialException attempts restarting serial connection
         retries test_cmd with restart parameter set to True
         on 2nd attempt prints "port disconnected"
-        
+        """ 
         try:
             if input:
                 data=[]
@@ -93,7 +100,7 @@ class Modem:
             else:  
                 self.ser.flush()
                 self.ser.write(cmd)
-                self.timeout=0.1
+                self.timeout=0.1 #find min
                 data=self.ser.readlines()
                 return self.parse_data(data)
 
@@ -106,37 +113,35 @@ class Modem:
 
 
     def parse_data(self, data):
+        """Parses raw data to remove new line characters, etc.
+        and returns it as a list.
+
+        data -- list of modem responses
+        returns a list
         """
-        data = list of modem responses
-        removes new line characters
-        returns new list
-        """
-        #print 'parsing data'
         output=[]
         for entry in data:
             output.append(entry.replace('\r','').replace('\n',''))
         return output
     
     def check_errors(self, data):
-        """
-        data = list of modem responses
-
-        checks for ERROR
+        """Checks if a function caused an error.
+        
+        data -- output from modem after an AT command
+        (use output from parse_data to make it look nicer)
 
         returns False for no errors
         returns error message from modem for first ERROR in list
         """
-        #print 'checking errors'
         for entry in data:
-            if entry.find('ERROR')!=-1:
+            if entry.find('ERROR') != -1:
                 return entry
         return False        
 
     def check_restart(self, data):
-        """
-        data = modem data from at command
+        """Checks if output indicates a restart.
 
-        checks for strings indicating modem restarted
+        data -- output from modem after an AT command
 
         returns True if restart detected
         returns False if no restart
@@ -149,7 +154,7 @@ class Modem:
                 #print 'ready'
                 return True
         return False
-    
+
     def restart_serial(self):
         """
         restarts serial connection

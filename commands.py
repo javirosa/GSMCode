@@ -1,5 +1,5 @@
 #TODO   signal minimum
-#       finish at
+#       check valid numbers w/check_num()
 
 min_signal=0 #minimum signal required to send a message
 
@@ -64,6 +64,7 @@ def set_charset(modem, charset):
     """
     if charset in ("IRA","GSM","PCCP437","8859-1","UCS2","HEX","SYNC"):
         at(modem, 'CSCS="'+charset+'"')
+        modem.charset = charset
     else:
         raise ValueError('Incompatible charset: '+charset)
 
@@ -77,7 +78,7 @@ def set_detailed_error(modem, enable=1):
     else:
         at(modem,"CMEE=0")
 
-def text_config(modem, text=1):
+def set_pdu(modem, text=1):
     """Sets text mode to PDU or Text
 
     text -- 1 or true enables text mode, 
@@ -85,8 +86,16 @@ def text_config(modem, text=1):
     """
     if text:
         at("CMGF=1")
+        modem.pdu = False
     else:
         at("CMGF=0")
+        modem.pdu = True
+
+def text_mode(modem):
+    if modem.charset != "GSM":
+        set_charset(modem, "GSM")
+    if modem.pdu:
+        set_pdu(modem, 1)
 
 #NETWORK AND CONNECTION
 def signal(modem, detail=0):
@@ -97,7 +106,7 @@ def signal(modem, detail=0):
     returns signal quality values for detailed or True 
     if not unknown and above minimum value
     """
-    q=at(modem, "CSQ?")[1].replace("+CSQ:",'').replace(",",'').strip()
+    q = at(modem, "CSQ?")[1].replace("+CSQ:",'').replace(",",'').strip()
     if q[:2] =='99' or q[2:] =='99':
         #Indicates no or unknown signal
         return False
@@ -109,11 +118,11 @@ def signal(modem, detail=0):
 def connected(modem, detail=0):
     """ Check network registration
 
-        detail -- 1 or true value returns detailed response
+    detail -- 1 or true value returns detailed response
 
-        return connection status (True/False or detailed)
+    return connection status (True/False or detailed)
     """
-    creg=at(modem,"CREG?")[1].replace("+CREG:",'').replace(",",'').strip()
+    creg = at(modem,"CREG?")[1].replace("+CREG:",'').replace(",",'').strip()
     if detail:
         return creg
     elif creg[1]=='1':
@@ -126,7 +135,7 @@ def connected(modem, detail=0):
 def check_network(modem):
     """ Check network connection and quality
 
-        return status (True/False or detailed)
+    return status (True/False or detailed)
     """
     if connected(modem) and signal(modem):
         return True
@@ -136,53 +145,61 @@ def check_network(modem):
 #MESSAGING
 def send(modem, number, msg):
     """Sends an SMS to the specified number"""
+    text_mode(modem)
+    #check_num()
     at(modem, "CMGS", number, msg)
 
 def save_msg(modem, index, msg):
     """Sends an SMS to the specified number"""
+    text_mode(modem)
     at(modem, "CMGW", index, msg)
 
 def get_all(modem):
     """Get all messages"""
-    return at(modem, "CMGL=ALL")
+    text_mode(modem)
+    return at(modem, 'CMGL="ALL"')
 
 def get_unread(modem):
     """Get all recieved messages"""
-    text_config(modem)
-    return at(modem, "CMGL=REC UNREAD")
+    text_mode(modem)
+    return at(modem, 'CMGL="REC UNREAD"')
 
 def get_rec(modem):
     """Get unread recieved messages"""
-    text_config(modem)
-    return at(modem, "CMGL=REC UNREAD").append(\
-        at(modem, "CMGL=REC READ"))
+    text_mode(modem)
+    return at(modem, 'CMGL="REC UNREAD"').append(\
+        at(modem, 'CMGL="REC READ"'))
 
 def get_rec_read(modem):
     """Get read messages"""
-    text_config(modem)
-    return at(modem, "CMGL=REC READ")
+    text_mode(modem)
+    return at(modem, 'CMGL="REC READ"')
 
 def get_sto_sent(modem):
     """Get stored, sent messages"""
-    text_config(modem)
-    return at(modem, "CMGL=STO SENT")
+    text_mode(modem)
+    return at(modem, 'CMGL="STO SENT"')
 
 def get_sto_unsent(modem):
     """Get stored unsent messages"""
-    text_config(modem)
-    return at(modem, "CMGL=STO UNSENT")
+    text_mode(modem)
+    return at(modem, 'CMGL="STO UNSENT"')
 
 def get_sto(modem):
     """Get stored messages"""
-    text_config(modem)
-    return at(modem, "CMGL=STO UNSENT").append(\
-        at(modem, "CMGL=STO SENT"))
+    text_mode(modem)
+    return at(modem, 'CMGL="STO UNSENT"').append(\
+        at(modem, 'CMGL="STO SENT"'))
 
-#def get_message(modem, msg):
+def get_message(modem, index):
+    """Get message at index on SIM"""
+    text_mode(modem)
+    return at(modem, 'CMGR="' + index + '"')
 
 #MEMORY
 #def mem_config(modem):
 
-#def delete(modem, msg):
+def delete(modem, index):
+    at(modem, 'CMGD="' + index + '"')
 
 #FLOW CONTROL
