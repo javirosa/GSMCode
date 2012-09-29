@@ -1,0 +1,33 @@
+AT+CMGL="ALL"
++CMGL: 1,"REC READ","10","","12/06/28,16:47:06-40"
+"Can't send your SMS to smscH: Phone not registered here.: Modem demo 2012-06-28 16:49:18"
+
++CMGL: 2,"REC READ","9999995","","12/06/14,22:05:31-40"
+Hi
+
++CMGL: 3,"REC READ","9999995","","12/06/14,22:11:56-40"
+hi
+
++CMGL: 4,"REC READ","10","","12/06/14,22:12:56-40"
+"Can't send your SMS to ?????: Phone not registered here.: @P\xa3H
+
++CMGL: 5,"REC READ","10","","12/06/14,22:45:47-40"
+"Can't send your SMS to ?????: Phone not registered here.: test"
+
++CMGL: 6,"REC READ","10","","12/06/14,22:47:10-40"
+'Can\'t send your SMS to ?????: Phone not registered here.: AT+CMGS="\'+number+\'"test'
+
++CMGL: 7,"REC READ","10","","12/06/14,22:58:30-40"
+"Can't send your SMS to ?????: Phone not registered here.: test
+
++CMGL: 8,"REC READ","9999995","","12/06/14,23:03:36-40"
+Nokia
+
++CMGL: 10,"REC READ","10","","12/06/28,16:47:06-40"
+"Can't send your SMS to smscH: Phone not registered here.: Modem demo 2012-06-28 16:49:18"
+
++CMGL: 11,"STO UNSENT","",""
+manual test+chr(26)attest putty
+
++CMGL: 15,"STO UNSENT","999999",""
+test2 9-23'

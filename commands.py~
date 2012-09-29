@@ -152,7 +152,7 @@ def send(modem, number, msg):
     #check_num()
     at(modem, "CMGS=\"", number, msg)
 
-def save_msg(modem, number, msg):
+def save_msg(modem, index, msg):
     """Sends an SMS to the specified number"""
     text_mode(modem)
     at(modem, "CMGW=\"", number, msg)
